@@ -1,8 +1,5 @@
-# state = [[],[],[],[],[],[],[]]
 STATE_WIDTH = 7
 STATE_HEIGHT = 6
-# STATE_WIDTH = 4
-# STATE_HEIGHT = 3
 MAX_CONSECUTIVE = 4
 
 MEMOIZATION_MIN = dict()  # {state: score}
