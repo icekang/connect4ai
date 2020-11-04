@@ -2,9 +2,6 @@ STATE_WIDTH = 7
 STATE_HEIGHT = 6
 MAX_CONSECUTIVE = 4
 
-MEMOIZATION_MIN = dict()  # {state: score}
-MEMOIZATION_MAX = dict()  # {state: score}
-
 '''
 Game play functions
 '''
@@ -200,11 +197,8 @@ def min_value_function(state: list, alpha: int, beta: int, curr_depth: int) -> i
     for action in range(STATE_WIDTH):
         result_state, able_to_insert = insert_chip(turn, action, state)
         if able_to_insert:
-            if (to_str(result_state) in MEMOIZATION_MAX):
-                return MEMOIZATION_MAX[to_str(result_state)]
             max_val = max_value_function(
                 result_state, alpha, beta, curr_depth + 1)
-            MEMOIZATION_MAX[to_str(result_state)] = max_val
             min_val = min(min_val, max_val)
             if min_val < alpha:
                 return min_val
@@ -226,11 +220,8 @@ def max_value_function(state: list, alpha: int, beta: int, curr_depth: int) -> i
     for action in range(STATE_WIDTH):
         result_state, able_to_insert = insert_chip(turn, action, state)
         if able_to_insert:
-            if (to_str(result_state) in MEMOIZATION_MIN):
-                return MEMOIZATION_MIN[to_str(result_state)]
             min_val = min_value_function(
                 result_state, alpha, beta, curr_depth + 1)
-            MEMOIZATION_MIN[to_str(result_state)] = min_val
             max_val = max(min_val, max_val)
             if max_val > beta:
                 return max_val
@@ -263,16 +254,6 @@ def magic_score(state: list):
         adjusted_score += score['B']/(score['A'] + -1e9)
 
     return adjusted_score
-
-
-def to_str(state: list) -> str:
-    '''
-    For memoization
-    '''
-    out_str = ''
-    for col in fill_empty_entry(state):
-        out_str += ''.join(col)
-    return out_str
 
 
 '''Initial State'''
