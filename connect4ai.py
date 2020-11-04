@@ -83,7 +83,7 @@ def get_winner(state: list) -> str:
 
 
 def is_fullboard(state: list) -> bool:
-    return sum([len(column) for column in state]) == STATE_WIDTH * STATE_HEIGHT
+    return count_depth(state) == STATE_WIDTH * STATE_HEIGHT
 
 
 def get_chip(turn: bool) -> str:
@@ -108,6 +108,10 @@ def insert_chip(turn: bool, col: int, state: list) -> (list, bool):
 '''
 AI functions
 '''
+
+
+def count_depth(state: list) -> int:
+    return sum([len(column) for column in state])
 
 
 def is_terminal_state(state: list, turn: str) -> bool:
