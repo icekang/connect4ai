@@ -1,9 +1,13 @@
 # state = [[],[],[],[],[],[],[]]
 STATE_WIDTH = 7
 STATE_HEIGHT = 6
-STATE_WIDTH = 4
-STATE_HEIGHT = 3
+# STATE_WIDTH = 4
+# STATE_HEIGHT = 3
 MAX_CONSECUTIVE = 4
+
+MEMOIZATION_MIN = dict()  # {state: score}
+MEMOIZATION_MAX = dict()  # {state: score}
+
 '''
 Game play functions
 '''
@@ -160,7 +164,10 @@ def min_value_function(state: list, alpha: int, beta: int) -> int:
     for action in range(STATE_WIDTH):
         result_state, able_to_insert = insert_chip(turn, action, state)
         if able_to_insert:
+            if (to_str(result_state) in MEMOIZATION_MAX):
+                return MEMOIZATION_MAX[to_str(result_state)]
             max_val = max_value_function(result_state, alpha, beta)
+            MEMOIZATION_MAX[to_str(result_state)] = max_val
             min_val = min(min_val, max_val)
             if min_val < alpha:
                 return min_val
@@ -180,7 +187,10 @@ def max_value_function(state: list, alpha: int, beta: int) -> int:
     for action in range(STATE_WIDTH):
         result_state, able_to_insert = insert_chip(turn, action, state)
         if able_to_insert:
+            if (to_str(result_state) in MEMOIZATION_MIN):
+                return MEMOIZATION_MIN[to_str(result_state)]
             min_val = min_value_function(result_state, alpha, beta)
+            MEMOIZATION_MIN[to_str(result_state)] = min_val
             max_val = max(min_val, max_val)
             if max_val > beta:
                 return max_val
@@ -188,6 +198,16 @@ def max_value_function(state: list, alpha: int, beta: int) -> int:
         else:
             continue
     return min_val
+
+
+def to_str(state: list) -> str:
+    '''
+    For memoization
+    '''
+    out_str = ''
+    for col in state:
+        out_str += ''.join(col)
+    return out_str
 
 
 '''Initial State'''
@@ -201,6 +221,7 @@ while not is_fullboard(state):
     else:
         print('Bot\'s turn')
         col = minimax(state)
+        print('column: {col}'.format(col=col))
     state, able_to_insert = insert_chip(turn, col, state)
     if not able_to_insert:
         print('You cannot insert at that')
