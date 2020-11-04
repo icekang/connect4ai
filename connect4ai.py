@@ -36,35 +36,58 @@ def out_of_bound_y(row_idx: int) -> bool:
     return row_idx >= STATE_HEIGHT or row_idx < 0
 
 
-def count_consecutive_chips(col_idx: int, row_idx: int, filled_state: list, chip: str) -> int:
+def count_consecutive_chips_direction(col_idx: int, row_idx: int, filled_state: list, chip: str, direction: int) -> int:
+    '''
+    direction
+    0 -> x
+    1 -> y
+    2 -> up right
+    3 -> down right
+    '''
     x_score = 0
     y_score = 0
     diag_score_up_right = 0
     diag_score_down_right = 0
 
-    for d_col in range(MAX_CONSECUTIVE):
-        if not out_of_bound_x(col_idx + d_col) and filled_state[col_idx + d_col][row_idx] == chip:
-            x_score += 1
-        else:
-            break
+    if direction == 0:
+        for d_col in range(MAX_CONSECUTIVE):
+            if not out_of_bound_x(col_idx + d_col) and filled_state[col_idx + d_col][row_idx] == chip:
+                x_score += 1
+            else:
+                break
+        return x_score
+    elif direction == 1:
+        for d_row in range(MAX_CONSECUTIVE):
+            if not out_of_bound_y(row_idx + d_row) and filled_state[col_idx][row_idx + d_row] == chip:
+                y_score += 1
+            else:
+                break
+        return y_score
+    elif direction == 2:
+        for d_col_row in range(MAX_CONSECUTIVE):
+            if not out_of_bound_x(col_idx + d_col_row) and not out_of_bound_y(row_idx + d_col_row) and filled_state[col_idx + d_col_row][row_idx + d_col_row] == chip:
+                diag_score_up_right += 1
+            else:
+                break
+        return diag_score_up_right
+    else:
+        for d_col_row in range(MAX_CONSECUTIVE):
+            if not out_of_bound_x(col_idx + d_col_row) and not out_of_bound_y(row_idx - d_col_row) and filled_state[col_idx + d_col_row][row_idx - d_col_row] == chip:
+                diag_score_down_right += 1
+            else:
+                break
+        return diag_score_down_right
 
-    for d_row in range(MAX_CONSECUTIVE):
-        if not out_of_bound_y(row_idx + d_col) and filled_state[col_idx][row_idx + d_row] == chip:
-            y_score += 1
-        else:
-            break
 
-    for d_col_row in range(MAX_CONSECUTIVE):
-        if not out_of_bound_x(col_idx + d_col_row) and not out_of_bound_y(row_idx + d_col_row) and filled_state[col_idx + d_col_row][row_idx + d_col_row] == chip:
-            diag_score_up_right += 1
-        else:
-            break
-
-    for d_col_row in range(MAX_CONSECUTIVE):
-        if not out_of_bound_x(col_idx + d_col_row) and not out_of_bound_y(row_idx - d_col_row) and filled_state[col_idx + d_col_row][row_idx - d_col_row] == chip:
-            diag_score_down_right += 1
-        else:
-            break
+def count_consecutive_chips(col_idx: int, row_idx: int, filled_state: list, chip: str) -> int:
+    x_score = count_consecutive_chips_direction(
+        col_idx, row_idx, filled_state, chip, 0)
+    y_score = count_consecutive_chips_direction(
+        col_idx, row_idx, filled_state, chip, 1)
+    diag_score_up_right = count_consecutive_chips_direction(
+        col_idx, row_idx, filled_state, chip, 2)
+    diag_score_down_right = count_consecutive_chips_direction(
+        col_idx, row_idx, filled_state, chip, 3)
 
     return max(x_score, y_score, diag_score_up_right, diag_score_down_right)
 
@@ -134,7 +157,21 @@ def is_terminal_state(state: list, turn: str) -> bool:
     return False
 
 
+def update_max_depth(state: list) -> int:
+    global max_depth
+    depth = count_depth(state)
+    if depth < 5:
+        max_depth = 4
+    elif depth < 12:
+        max_depth = 6
+    elif depth < 24:
+        max_depth = 8
+    else:
+        max_depth = 10
+
+
 def minimax(state: list):
+    update_max_depth(state)
     turn = False  # Let's B be the bot.
     alpha, beta = -1e9, 1e9
     max_val = -1e9
@@ -143,7 +180,7 @@ def minimax(state: list):
     for action in range(STATE_WIDTH):
         result_state, able_to_insert = insert_chip(turn, action, state)
         if able_to_insert:
-            min_val = min_value_function(result_state, alpha, beta)
+            min_val = min_value_function(result_state, alpha, beta, 0)
             if min_val > max_val:
                 best_action = action
                 max_val = min_val
@@ -154,10 +191,12 @@ def minimax(state: list):
     return best_action
 
 
-def min_value_function(state: list, alpha: int, beta: int) -> int:
+def min_value_function(state: list, alpha: int, beta: int, curr_depth: int) -> int:
     turn = True  # Player's turn
     if is_terminal_state(state, not turn):  # If AI win return score of 4
-        return 4
+        return 1e9
+    if curr_depth == max_depth:
+        return magic_score(state)
     max_val = -1e9
     min_val = 1e9
     # All actions
@@ -166,7 +205,8 @@ def min_value_function(state: list, alpha: int, beta: int) -> int:
         if able_to_insert:
             if (to_str(result_state) in MEMOIZATION_MAX):
                 return MEMOIZATION_MAX[to_str(result_state)]
-            max_val = max_value_function(result_state, alpha, beta)
+            max_val = max_value_function(
+                result_state, alpha, beta, curr_depth + 1)
             MEMOIZATION_MAX[to_str(result_state)] = max_val
             min_val = min(min_val, max_val)
             if min_val < alpha:
@@ -177,10 +217,12 @@ def min_value_function(state: list, alpha: int, beta: int) -> int:
     return min_val
 
 
-def max_value_function(state: list, alpha: int, beta: int) -> int:
+def max_value_function(state: list, alpha: int, beta: int, curr_depth: int) -> int:
     turn = False  # AI's turn
     if is_terminal_state(state, not turn):  # If Player win return score of -4
-        return -4
+        return -1e9
+    if curr_depth == max_depth:
+        return -magic_score(state)
     max_val = -1e9
     min_val = 1e9
     # All actions
@@ -189,7 +231,8 @@ def max_value_function(state: list, alpha: int, beta: int) -> int:
         if able_to_insert:
             if (to_str(result_state) in MEMOIZATION_MIN):
                 return MEMOIZATION_MIN[to_str(result_state)]
-            min_val = min_value_function(result_state, alpha, beta)
+            min_val = min_value_function(
+                result_state, alpha, beta, curr_depth + 1)
             MEMOIZATION_MIN[to_str(result_state)] = min_val
             max_val = max(min_val, max_val)
             if max_val > beta:
@@ -198,6 +241,31 @@ def max_value_function(state: list, alpha: int, beta: int) -> int:
         else:
             continue
     return min_val
+
+
+def magic_score(state: list):
+    x_score = {'A': 0, 'B': 0}
+    y_score = {'A': 0, 'B': 0}
+    diag_score_up_right = {'A': 0, 'B': 0}
+    diag_score_down_right = {'A': 0, 'B': 0}
+
+    filled_state = fill_empty_entry(state)
+    for col_idx in range(STATE_WIDTH):
+        for row_idx in range(STATE_HEIGHT):
+            for chip in ['A', 'B']:
+                x_score[chip] = count_consecutive_chips_direction(
+                    col_idx, row_idx, filled_state, chip, 0)
+                y_score[chip] = count_consecutive_chips_direction(
+                    col_idx, row_idx, filled_state, chip, 1)
+                diag_score_up_right[chip] = count_consecutive_chips_direction(
+                    col_idx, row_idx, filled_state, chip, 2)
+                diag_score_down_right[chip] = count_consecutive_chips_direction(
+                    col_idx, row_idx, filled_state, chip, 3)
+    adjusted_score = 0
+    for score in [x_score, y_score, diag_score_up_right, diag_score_down_right]:
+        adjusted_score += score['B']/(score['A'] + -1e9)
+
+    return adjusted_score
 
 
 def to_str(state: list) -> str:
