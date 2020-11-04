@@ -128,56 +128,65 @@ def is_terminal_state(state: list, turn: str) -> bool:
 
 def minimax(state: list):
     turn = False  # Let's B be the bot.
+    alpha, beta = -1e9, 1e9
     max_val = -1e9
     best_action = -1
     # All actions
     for action in range(STATE_WIDTH):
         result_state, able_to_insert = insert_chip(turn, action, state)
         if able_to_insert:
-            min_val = min_value_function(result_state)
+            min_val = min_value_function(result_state, alpha, beta)
             if min_val > max_val:
                 best_action = action
                 max_val = min_val
+                alpha = max(alpha, max_val)
         else:
             continue
 
     return best_action
 
 
-def min_value_function(state: list) -> int:
+def min_value_function(state: list, alpha: int, beta: int) -> int:
     turn = True  # Player's turn
     if is_terminal_state(state, not turn):  # If AI win return score of 4
         return 4
+    max_val = -1e9
     min_val = 1e9
     # All actions
     for action in range(STATE_WIDTH):
         result_state, able_to_insert = insert_chip(turn, action, state)
         if able_to_insert:
-            max_val = max_value_function(result_state)
+            max_val = max_value_function(result_state, alpha, beta)
             min_val = min(min_val, max_val)
+            if min_val < alpha:
+                return min_val
+            beta = min(beta, min_val)
         else:
             continue
     return min_val
 
 
-def max_value_function(state: list) -> int:
+def max_value_function(state: list, alpha: int, beta: int) -> int:
     turn = False  # AI's turn
     if is_terminal_state(state, not turn):  # If Player win return score of -4
         return -4
     max_val = -1e9
+    min_val = 1e9
     # All actions
     for action in range(STATE_WIDTH):
         result_state, able_to_insert = insert_chip(turn, action, state)
         if able_to_insert:
-            min_val = min_value_function(result_state)
+            min_val = min_value_function(result_state, alpha, beta)
             max_val = max(min_val, max_val)
+            if max_val > beta:
+                return max_val
+            alpha = max(alpha, max_val)
         else:
             continue
     return min_val
 
 
 '''Initial State'''
-state = [[], [], [], [], [], [], []]
 state = [[], [], [], [], [], [], []]
 turn = True  # Player's turn
 while not is_fullboard(state):
