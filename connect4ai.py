@@ -45,7 +45,7 @@ def count_consecutive_chips(col_idx: int, row_idx: int, filled_state: list, chip
             break
 
     for d_row in range(MAX_CONSECUTIVE):
-        if not out_of_bound_y(row_idx + d_col) and filled_state[d_col][row_idx + d_row] == chip:
+        if not out_of_bound_y(row_idx + d_col) and filled_state[col_idx][row_idx + d_row] == chip:
             y_score += 1
         else:
             break
