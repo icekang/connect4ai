@@ -1,6 +1,8 @@
 # state = [[],[],[],[],[],[],[]]
 STATE_WIDTH = 7
 STATE_HEIGHT = 6
+STATE_WIDTH = 4
+STATE_HEIGHT = 3
 MAX_CONSECUTIVE = 4
 '''
 Game play functions
@@ -103,12 +105,89 @@ def insert_chip(turn: bool, col: int, state: list) -> (list, bool):
     return new_state, True
 
 
+'''
+AI functions
+'''
+
+
+def is_terminal_state(state: list, turn: str) -> bool:
+    '''
+    returns whether turn wins or not
+    '''
+    max_score = -1
+    chip = get_chip(turn)
+    filled_state = fill_empty_entry(state)
+    for col_idx in range(STATE_WIDTH):
+        for row_idx in range(STATE_HEIGHT):
+            max_score = max(max_score, count_consecutive_chips(
+                col_idx, row_idx, filled_state, chip))
+            if max_score == MAX_CONSECUTIVE:
+                return True
+    return False
+
+
+def minimax(state: list):
+    turn = False  # Let's B be the bot.
+    max_val = -1e9
+    best_action = -1
+    # All actions
+    for action in range(STATE_WIDTH):
+        result_state, able_to_insert = insert_chip(turn, action, state)
+        if able_to_insert:
+            min_val = min_value_function(result_state)
+            if min_val > max_val:
+                best_action = action
+                max_val = min_val
+        else:
+            continue
+
+    return best_action
+
+
+def min_value_function(state: list) -> int:
+    turn = True  # Player's turn
+    if is_terminal_state(state, not turn):  # If AI win return score of 4
+        return 4
+    min_val = 1e9
+    # All actions
+    for action in range(STATE_WIDTH):
+        result_state, able_to_insert = insert_chip(turn, action, state)
+        if able_to_insert:
+            max_val = max_value_function(result_state)
+            min_val = min(min_val, max_val)
+        else:
+            continue
+    return min_val
+
+
+def max_value_function(state: list) -> int:
+    turn = False  # AI's turn
+    if is_terminal_state(state, not turn):  # If Player win return score of -4
+        return -4
+    max_val = -1e9
+    # All actions
+    for action in range(STATE_WIDTH):
+        result_state, able_to_insert = insert_chip(turn, action, state)
+        if able_to_insert:
+            min_val = min_value_function(result_state)
+            max_val = max(min_val, max_val)
+        else:
+            continue
+    return min_val
+
+
 '''Initial State'''
 state = [[], [], [], [], [], [], []]
-turn = True
+state = [[], [], [], [], [], [], []]
+turn = True  # Player's turn
 while not is_fullboard(state):
     print_state(state)
-    col = int(input('{chip} turn enter column: '.format(chip=get_chip(turn))))
+    if turn:
+        col = int(
+            input('{chip}\'s turn enter column: '.format(chip=get_chip(turn))))
+    else:
+        print('Bot\'s turn')
+        col = minimax(state)
     state, able_to_insert = insert_chip(turn, col, state)
     if not able_to_insert:
         print('You cannot insert at that')
