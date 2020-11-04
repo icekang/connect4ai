@@ -205,7 +205,7 @@ def to_str(state: list) -> str:
     For memoization
     '''
     out_str = ''
-    for col in state:
+    for col in fill_empty_entry(state):
         out_str += ''.join(col)
     return out_str
 
