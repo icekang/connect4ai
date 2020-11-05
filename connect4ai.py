@@ -2,6 +2,8 @@ STATE_WIDTH = 7
 STATE_HEIGHT = 6
 MAX_CONSECUTIVE = 4
 
+PLAYER = True
+AI = False
 '''
 Game play functions
 '''
@@ -166,29 +168,32 @@ def update_max_depth(state: list) -> int:
 
 def minimax(state: list):
     update_max_depth(state)
-    turn = False  # Let's B be the bot.
+    turn = AI  # Let's B be the bot.
     alpha, beta = -2e9, 2e9
     max_val = -2e9
     best_action = -1
     # All actions
+    scores = list()
     for action in range(STATE_WIDTH):
         result_state, able_to_insert = insert_chip(turn, action, state)
         if able_to_insert:
             min_val = min_value_function(result_state, alpha, beta, 0)
+            scores.append(min_val)
             if min_val > max_val:
                 best_action = action
                 max_val = min_val
                 alpha = max(alpha, max_val)
         else:
             continue
-
+    print(scores)
     return best_action
 
 
 def min_value_function(state: list, alpha: int, beta: int, curr_depth: int) -> int:
-    turn = True  # Player's turn
-    if is_terminal_state(state, not turn):  # If AI win return score of 4
-        return 1e9
+    # Player wants to win and get max score
+    turn = PLAYER  # Player's turn
+    if is_terminal_state(state, AI):  # If AI win return score of 4
+        return 1e9 / (curr_depth + 1e-1)
     if curr_depth == max_depth:
         return magic_score(state)
     max_val = -1e9
@@ -200,7 +205,7 @@ def min_value_function(state: list, alpha: int, beta: int, curr_depth: int) -> i
             max_val = max_value_function(
                 result_state, alpha, beta, curr_depth + 1)
             min_val = min(min_val, max_val)
-            if min_val < alpha:
+            if min_val <= alpha:
                 return min_val
             beta = min(beta, min_val)
         else:
@@ -209,9 +214,10 @@ def min_value_function(state: list, alpha: int, beta: int, curr_depth: int) -> i
 
 
 def max_value_function(state: list, alpha: int, beta: int, curr_depth: int) -> int:
-    turn = False  # AI's turn
-    if is_terminal_state(state, not turn):  # If Player win return score of -4
-        return -1e9
+    # AI wants to win and get max score
+    turn = AI  # AI's turn
+    if is_terminal_state(state, PLAYER):  # If Player win return score of -4
+        return -1e9 / (curr_depth + 1e-1)
     if curr_depth == max_depth:
         return -magic_score(state)
     max_val = -1e9
@@ -223,12 +229,12 @@ def max_value_function(state: list, alpha: int, beta: int, curr_depth: int) -> i
             min_val = min_value_function(
                 result_state, alpha, beta, curr_depth + 1)
             max_val = max(min_val, max_val)
-            if max_val > beta:
+            if max_val >= beta:
                 return max_val
             alpha = max(alpha, max_val)
         else:
             continue
-    return min_val
+    return max_val
 
 
 def magic_score(state: list):
