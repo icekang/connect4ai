@@ -291,24 +291,25 @@ def magic_score(state: list):
     return adjusted_score
 
 
-'''Initial State'''
-state = [[], [], [], [], [], [], []]
-turn = True  # Player's turn
-while not is_fullboard(state):
-    print_state(state)
-    if turn:
-        col = int(
-            input('{chip}\'s turn enter column: '.format(chip=get_chip(turn))))
-    else:
-        print('Bot\'s turn')
-        col = minimax(state)
-        print('column: {col}'.format(col=col))
-    state, able_to_insert = insert_chip(turn, col, state)
-    if not able_to_insert:
-        print('You cannot insert at that')
-    else:
-        winner = get_winner(state)
-        if winner:
-            print('Winner is {winner}'.format(winner=winner))
-            break
-        turn = not turn
+if __name__ == '__main__':
+    '''Initial State'''
+    state = [[], [], [], [], [], [], []]
+    turn = True  # Player's turn
+    while not is_fullboard(state):
+        print_state(state)
+        if turn:
+            col = int(
+                input('{chip}\'s turn enter column: '.format(chip=get_chip(turn))))
+        else:
+            print('Bot\'s turn')
+            col = minimax(state)
+            print('column: {col}'.format(col=col))
+        state, able_to_insert = insert_chip(turn, col, state)
+        if not able_to_insert:
+            print('You cannot insert at that')
+        else:
+            winner = get_winner(state)
+            if winner:
+                print('Winner is {winner}'.format(winner=winner))
+                break
+            turn = not turn

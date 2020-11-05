@@ -1,11 +1,29 @@
-'''
-All credit of the game UI goes to: https://github.com/KeithGalli/Connect4-Python
-'''
+import connect4ai
 
 import numpy as np
 import pygame
 import sys
 import math
+
+
+def board_to_state_adapter(board: np.array) -> list:
+    state = list()
+    chip_map = {1: 'A', 2: 'B'}
+    for col in range(COLUMN_COUNT):
+        column_list = list()
+        for row in range(ROW_COUNT):
+            chip_num = board[row][col]
+            if chip_num in chip_map:
+                column_list.append(chip_map[chip_num])
+        state.append(column_list)
+
+    return state
+
+
+'''
+All credit of the game UI goes to: https://github.com/KeithGalli/Connect4-Python
+'''
+
 
 BLUE = (0, 0, 255)
 BLACK = (0, 0, 0)
@@ -107,7 +125,6 @@ pygame.display.update()
 myfont = pygame.font.SysFont("monospace", 75)
 
 while not game_over:
-
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             sys.exit()
@@ -123,7 +140,7 @@ while not game_over:
                     screen, YELLOW, (posx, int(SQUARESIZE/2)), RADIUS)
         pygame.display.update()
 
-        if event.type == pygame.MOUSEBUTTONDOWN:
+        if turn == 1 or event.type == pygame.MOUSEBUTTONDOWN:
             pygame.draw.rect(screen, BLACK, (0, 0, width, SQUARESIZE))
             # print(event.pos)
             # Ask for Player 1 Input
@@ -142,8 +159,12 @@ while not game_over:
 
             # Ask for Player 2 Input
             else:
-                posx = event.pos[0]
-                col = int(math.floor(posx/SQUARESIZE))
+                # posx = event.pos[0]
+                # col = int(math.floor(posx/SQUARESIZE))
+                '''
+                AI Turn goes here
+                '''
+                col = connect4ai.minimax(board_to_state_adapter(board))
 
                 if is_valid_location(board, col):
                     row = get_next_open_row(board, col)
