@@ -251,7 +251,7 @@ def magic_score(state: list):
                     col_idx, row_idx, filled_state, chip, 3)
     adjusted_score = 0
     for score in [x_score, y_score, diag_score_up_right, diag_score_down_right]:
-        adjusted_score += score['B']/(score['A'] + -1e9)
+        adjusted_score += score['B']/(score['A'] + 1e-9)
 
     return adjusted_score
 
