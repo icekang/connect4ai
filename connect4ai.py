@@ -4,6 +4,9 @@ MAX_CONSECUTIVE = 4
 
 PLAYER = True
 AI = False
+
+MEMOIZATION_MIN = dict()
+MEMOIZATION_MAX = dict()
 '''
 Game play functions
 '''
@@ -153,6 +156,23 @@ def is_terminal_state(state: list, turn: str) -> bool:
     return False
 
 
+def clean_memoization():
+    global MEMOIZATION_MAX
+    global MEMOIZATION_MIN
+    MEMOIZATION_MAX = dict()
+    MEMOIZATION_MIN = dict()
+
+
+def to_str(state: list) -> str:
+    '''
+    For memoization
+    '''
+    out_str = ''
+    for col in fill_empty_entry(state):
+        out_str += ''.join(col)
+    return out_str
+
+
 def update_max_depth(state: list) -> int:
     global max_depth
     depth = count_depth(state)
@@ -167,6 +187,7 @@ def update_max_depth(state: list) -> int:
 
 
 def minimax(state: list):
+    clean_memoization()
     update_max_depth(state)
     turn = AI  # Let's B be the bot.
     alpha, beta = -2e9, 2e9
@@ -202,8 +223,12 @@ def min_value_function(state: list, alpha: int, beta: int, curr_depth: int) -> i
     for action in range(STATE_WIDTH):
         result_state, able_to_insert = insert_chip(turn, action, state)
         if able_to_insert:
-            max_val = max_value_function(
-                result_state, alpha, beta, curr_depth + 1)
+            if to_str(result_state) in MEMOIZATION_MIN:
+                max_val = MEMOIZATION_MIN[to_str(result_state)]
+            else:
+                max_val = max_value_function(
+                    result_state, alpha, beta, curr_depth + 1)
+                MEMOIZATION_MIN[to_str(result_state)] = max_val
             min_val = min(min_val, max_val)
             if min_val <= alpha:
                 return min_val
@@ -226,8 +251,12 @@ def max_value_function(state: list, alpha: int, beta: int, curr_depth: int) -> i
     for action in range(STATE_WIDTH):
         result_state, able_to_insert = insert_chip(turn, action, state)
         if able_to_insert:
-            min_val = min_value_function(
-                result_state, alpha, beta, curr_depth + 1)
+            if to_str(result_state) in MEMOIZATION_MAX:
+                min_val = MEMOIZATION_MAX[to_str(result_state)]
+            else:
+                min_val = min_value_function(
+                    result_state, alpha, beta, curr_depth + 1)
+                MEMOIZATION_MAX[to_str(result_state)] = min_val
             max_val = max(min_val, max_val)
             if max_val >= beta:
                 return max_val
