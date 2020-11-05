@@ -167,8 +167,8 @@ def update_max_depth(state: list) -> int:
 def minimax(state: list):
     update_max_depth(state)
     turn = False  # Let's B be the bot.
-    alpha, beta = -1e9, 1e9
-    max_val = -1e9
+    alpha, beta = -2e9, 2e9
+    max_val = -2e9
     best_action = -1
     # All actions
     for action in range(STATE_WIDTH):
