@@ -1,3 +1,5 @@
+import random
+
 STATE_WIDTH = 7
 STATE_HEIGHT = 6
 MAX_CONSECUTIVE = 4
@@ -192,6 +194,7 @@ def minimax(state: list):
     turn = AI  # Let's B be the bot.
     alpha, beta = -2e9, 2e9
     max_val = -2e9
+    best_actions = list()
     best_action = -1
     # All actions
     scores = list()
@@ -201,9 +204,13 @@ def minimax(state: list):
             min_val = min_value_function(result_state, alpha, beta, 0)
             scores.append(min_val)
             if min_val > max_val:
+                best_actions = list()
+                best_actions.append(action)
                 best_action = action
                 max_val = min_val
                 alpha = max(alpha, max_val)
+            elif min_val == max_val:
+                best_actions.append(action)
         else:
             continue
     print(scores)
@@ -267,27 +274,23 @@ def max_value_function(state: list, alpha: int, beta: int, curr_depth: int) -> i
 
 
 def magic_score(state: list):
-    x_score = {'A': 0, 'B': 0}
-    y_score = {'A': 0, 'B': 0}
-    diag_score_up_right = {'A': 0, 'B': 0}
-    diag_score_down_right = {'A': 0, 'B': 0}
+    c1 = [3, 4, 5, 5, 4, 3]
+    c2 = [4, 6, 8, 8, 6, 4]
+    c3 = [5, 8, 11, 11, 8, 5]
+    c4 = [7, 10, 13, 13, 10, 7]
+    h2 = [c1, c2, c3, c4, c3, c2, c1]
 
     filled_state = fill_empty_entry(state)
+    boon = 1e-9
+    bane = 1e-9
     for col_idx in range(STATE_WIDTH):
         for row_idx in range(STATE_HEIGHT):
-            for chip in ['A', 'B']:
-                x_score[chip] = count_consecutive_chips_direction(
-                    col_idx, row_idx, filled_state, chip, 0)
-                y_score[chip] = count_consecutive_chips_direction(
-                    col_idx, row_idx, filled_state, chip, 1)
-                diag_score_up_right[chip] = count_consecutive_chips_direction(
-                    col_idx, row_idx, filled_state, chip, 2)
-                diag_score_down_right[chip] = count_consecutive_chips_direction(
-                    col_idx, row_idx, filled_state, chip, 3)
-    adjusted_score = 0
-    for score in [x_score, y_score, diag_score_up_right, diag_score_down_right]:
-        adjusted_score += score['B']/(score['A'] + 1e-9)
-
+            boon += int(filled_state[col_idx][row_idx] ==
+                        get_chip(AI)) * h2[col_idx][row_idx]
+            bane += int(filled_state[col_idx][row_idx] ==
+                        get_chip(PLAYER)) * h2[col_idx][row_idx]
+    adjusted_score = boon**2/bane if (boon > bane) else -(bane**2/boon)
+    print('Meets magic score', adjusted_score)
     return adjusted_score
 
 
